@@ -19,7 +19,7 @@ WORKDIR /app
 COPY . .
 
 # PHP依存関係（artisanコマンドは実行しない）
-RUN composer install --optimize-autoloader --no-dev --no-scripts
+RUN php -d memory_limit=-1 /usr/bin/composer install --optimize-autoloader --no-dev --no-scripts
 
 # フロントエンドビルド
 RUN npm ci && npm run build
