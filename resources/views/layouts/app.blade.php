@@ -6,25 +6,40 @@
     <title>@yield('title', '歯科患者管理')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F3F4F6] min-h-screen flex text-[#111827]">
+<body class="bg-[#F3F4F6] min-h-screen text-[#111827]" x-data="layout()">
+
+    {{-- モバイルオーバーレイ --}}
+    <div x-show="mobileNav"
+         x-cloak
+         class="fixed inset-0 bg-black/40 z-20"
+         @click="mobileNav = false"
+         style="display:none"></div>
 
     {{-- サイドバー --}}
-    <nav class="w-56 min-h-screen bg-white border-r border-gray-200 flex flex-col fixed top-0 left-0 z-10">
+    <nav class="fixed top-0 left-0 z-30 h-screen bg-white border-r border-gray-200 flex flex-col transition-all duration-200"
+         :style="{
+             width:     isTablet && !mobileNav ? '56px' : '224px',
+             transform: isMobile && !mobileNav ? 'translateX(-100%)' : 'translateX(0)'
+         }">
 
         {{-- ロゴ --}}
-        <div class="px-5 py-5 border-b border-gray-100">
-            <div class="flex items-center gap-2">
-                <div class="w-7 h-7 bg-blue-600 rounded-md flex items-center justify-center">
+        <div class="shrink-0 border-b border-gray-100 overflow-hidden transition-all duration-200"
+             :style="{ padding: isTablet && !mobileNav ? '20px 10px' : '20px' }">
+            <div class="flex items-center gap-2"
+                 :class="isTablet && !mobileNav ? 'justify-center' : ''">
+                <div class="w-7 h-7 bg-blue-600 rounded-md flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
                 </div>
-                <span class="text-sm font-bold text-gray-800 leading-tight">歯科患者<br>管理システム</span>
+                <span class="text-sm font-bold text-gray-800 leading-tight whitespace-nowrap"
+                      :class="(isTablet && !mobileNav) ? 'hidden' : ''">歯科患者<br>管理システム</span>
             </div>
         </div>
 
         {{-- ナビゲーション --}}
-        <ul class="flex-1 px-3 py-4 space-y-1">
+        <ul class="flex-1 py-4 space-y-1 overflow-y-auto"
+            :style="{ padding: isTablet && !mobileNav ? '16px 8px' : '16px 12px' }">
             @php
                 $navItems = [
                     ['route' => 'dashboard',          'label' => 'ダッシュボード', 'icon' => 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'],
@@ -44,39 +59,60 @@
             @endphp
             <li>
                 <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-3 min-h-[44px] px-3 rounded-lg text-sm font-medium transition-colors
-                          {{ $isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+                   title="{{ $item['label'] }}"
+                   class="flex items-center gap-3 min-h-[44px] rounded-lg text-sm font-medium transition-colors
+                          {{ $isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}"
+                   :class="isTablet && !mobileNav ? 'justify-center px-2' : 'px-3'">
                     <svg class="w-5 h-5 shrink-0 {{ $isActive ? 'text-blue-600' : 'text-gray-400' }}"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $item['icon'] }}"/>
                     </svg>
-                    {{ $item['label'] }}
+                    <span :class="(isTablet && !mobileNav) ? 'hidden' : ''">{{ $item['label'] }}</span>
                 </a>
             </li>
             @endforeach
         </ul>
 
         {{-- ログアウト --}}
-        <div class="px-3 py-4 border-t border-gray-100">
-            <div class="flex items-center gap-2 px-3 mb-3">
-                <span class="text-xs text-gray-500 truncate">{{ auth()->user()->name ?? '' }}</span>
+        <div class="shrink-0 border-t border-gray-100 transition-all duration-200"
+             :style="{ padding: isTablet && !mobileNav ? '16px 8px' : '16px 12px' }">
+            <div class="px-3 mb-3" :class="(isTablet && !mobileNav) ? 'hidden' : ''">
+                <span class="text-xs text-gray-500 truncate block">{{ auth()->user()->name ?? '' }}</span>
             </div>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit"
-                    class="w-full flex items-center gap-3 min-h-[40px] px-3 rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        title="ログアウト"
+                        class="w-full flex items-center gap-3 min-h-[44px] rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+                        :class="isTablet && !mobileNav ? 'justify-center px-2' : 'px-3'">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                     </svg>
-                    ログアウト
+                    <span :class="(isTablet && !mobileNav) ? 'hidden' : ''">ログアウト</span>
                 </button>
             </form>
         </div>
     </nav>
 
     {{-- メインコンテンツ --}}
-    <main class="flex-1 ml-56 min-h-screen">
-        <div class="max-w-7xl mx-auto px-6 py-6">
+    <main class="min-h-screen transition-all duration-200"
+          :style="{ marginLeft: isMobile ? '0' : (isTablet ? '56px' : '224px') }">
+
+        {{-- モバイルヘッダー --}}
+        <div x-show="isMobile"
+             x-cloak
+             style="display:none"
+             class="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100">
+            <button @click="mobileNav = true"
+                    class="p-2 rounded-lg hover:bg-gray-100 text-gray-600">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <span class="text-sm font-bold text-gray-800">歯科患者管理システム</span>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 md:px-6 py-6">
 
             @if(session('success'))
                 <div class="mb-4 flex items-center gap-3 p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm">
@@ -99,6 +135,23 @@
             @yield('content')
         </div>
     </main>
+
+    <script>
+    function layout() {
+        return {
+            mobileNav: false,
+            isMobile:  window.innerWidth < 768,
+            isTablet:  window.innerWidth >= 768 && window.innerWidth < 1024,
+            init() {
+                window.addEventListener('resize', () => {
+                    this.isMobile = window.innerWidth < 768;
+                    this.isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+                    if (!this.isMobile) this.mobileNav = false;
+                });
+            },
+        };
+    }
+    </script>
 
 </body>
 </html>

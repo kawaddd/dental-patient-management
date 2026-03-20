@@ -4,14 +4,28 @@
 
 @section('content')
 
-<div class="mb-6">
+<div x-data="customerSearch()" x-init="init()" @keydown.window.escape="clearFilters()">
+
+<div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold text-gray-900">患者一覧</h1>
+    <button @click="showFilters = !showFilters"
+            class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors min-h-[44px] lg:hidden">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+        </svg>
+        フィルター
+        <span x-show="activeFilterCount > 0"
+              class="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold leading-none"
+              x-text="activeFilterCount"></span>
+    </button>
 </div>
 
-<div class="flex gap-5" x-data="customerSearch()" x-init="init()" @keydown.window.escape="clearFilters()">
+<div class="flex gap-5">
 
     {{-- 左: 検索フィルタ --}}
-    <div class="w-60 shrink-0 space-y-3">
+    <div class="w-60 shrink-0 space-y-3"
+         x-show="showFilters || isLg"
+         x-cloak>
 
         {{-- 患者ID --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
@@ -275,6 +289,8 @@
 
 </div>
 
+</div>
+
 <script>
 function customerSearch() {
     return {
@@ -291,8 +307,20 @@ function customerSearch() {
         total:       0,
         pagination:  '',
         loading:     false,
+        showFilters: false,
+        isLg:        window.innerWidth >= 1024,
+
+        get activeFilterCount() {
+            return (this.filters.customer_id ? 1 : 0)
+                + this.filters.store_ids.length
+                + this.filters.treatment_types.length
+                + this.filters.treatment_areas.length;
+        },
 
         init() {
+            window.addEventListener('resize', () => {
+                this.isLg = window.innerWidth >= 1024;
+            });
             this.search();
         },
 
