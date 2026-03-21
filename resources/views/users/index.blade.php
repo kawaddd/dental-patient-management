@@ -18,15 +18,15 @@
     </a>
 </div>
 
-<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-    <table class="w-full text-sm">
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+    <table class="w-full text-sm" style="min-width: 560px;">
         <thead>
             <tr class="border-b border-gray-100 bg-gray-50">
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">名前</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide">メールアドレス</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-36">パスワード</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-32">登録日</th>
-                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide w-28">操作</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-24">パスワード</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide w-24">登録日</th>
+                <th class="px-5 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide w-20">操作</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
@@ -35,18 +35,16 @@
 
                 {{-- 名前 --}}
                 <td class="px-5 py-3">
-                    <div class="flex items-center gap-2">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-medium text-gray-800">{{ $user->name }}</span>
-                                @if($user->is_admin)
-                                    <span class="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md">管理者</span>
-                                @endif
-                            </div>
-                            @if($user->id === auth()->id())
-                                <div class="text-xs text-blue-500">自分のアカウント</div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-medium text-gray-800">{{ $user->name }}</span>
+                            @if($user->is_admin)
+                                <span class="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-md whitespace-nowrap shrink-0">管理者</span>
                             @endif
                         </div>
+                        @if($user->id === auth()->id())
+                            <div class="text-xs text-blue-500 mt-0.5">自分のアカウント</div>
+                        @endif
                     </div>
                 </td>
 
@@ -59,14 +57,14 @@
                 </td>
 
                 {{-- 登録日 --}}
-                <td class="px-5 py-3 text-gray-400 text-xs">{{ $user->created_at->format('Y/m/d') }}</td>
+                <td class="px-5 py-3 text-gray-400 text-xs whitespace-nowrap">{{ $user->created_at->format('Y/m/d') }}</td>
 
                 {{-- 操作 --}}
                 <td class="px-5 py-3 text-right">
                     <div class="flex items-center justify-end gap-2">
                         @if($user->id === auth()->id())
                         <a href="{{ route('users.edit', $user) }}"
-                           class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                           class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors whitespace-nowrap">
                             編集
                         </a>
                         @endif
@@ -76,7 +74,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"
-                                        class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                                        class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors whitespace-nowrap">
                                     削除
                                 </button>
                             </form>

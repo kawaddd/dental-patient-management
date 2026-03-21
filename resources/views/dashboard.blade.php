@@ -10,10 +10,10 @@
 </div>
 
 {{-- サマリーカード --}}
-<div class="grid grid-cols-5 gap-5 mb-8">
+<div class="grid grid-cols-3 lg:grid-cols-5 gap-5 mb-8">
 
     {{-- 患者総数 --}}
-    <div class="col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+    <div class="col-span-3 lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div class="flex items-center justify-between mb-4">
             <p class="text-sm font-medium text-gray-500">患者総数</p>
             <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -87,19 +87,17 @@
 
     @forelse($recentHistories as $history)
         <a href="{{ route('customers.show', $history->customer) }}"
-           class="flex items-center justify-between px-6 py-4 border-b border-gray-50 hover:bg-gray-50 transition-colors last:border-0">
-            <div class="flex items-center gap-4">
-                <div>
-                    <p class="font-medium text-gray-900 text-sm">{{ $history->customer->name }}</p>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                        {{ $history->treatment_type }}
-                        @if($history->treatment_area)
-                            <span class="text-gray-400">・{{ $history->treatment_area }}</span>
-                        @endif
-                    </p>
-                </div>
+           class="flex items-center justify-between px-6 py-4 border-b border-gray-50 hover:bg-gray-50 transition-colors last:border-0 gap-4">
+            <div class="min-w-0 flex-1">
+                <p class="font-medium text-gray-900 text-sm truncate">{{ $history->customer->name }}</p>
+                <p class="text-xs text-gray-500 mt-0.5 truncate">
+                    {{ $history->treatment_type }}
+                    @if($history->treatment_area)
+                        <span class="text-gray-400">・{{ $history->treatment_area }}</span>
+                    @endif
+                </p>
             </div>
-            <div class="text-right">
+            <div class="text-right shrink-0">
                 <p class="text-xs text-gray-400">{{ $history->treated_at->format('m/d') }}</p>
                 @if($history->staff)
                     <p class="text-xs text-gray-400 mt-0.5">{{ $history->staff }}</p>

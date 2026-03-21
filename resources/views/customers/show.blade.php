@@ -24,10 +24,10 @@
 </div>
 
 {{-- 2カラムレイアウト --}}
-<div class="flex gap-6 items-start">
+<div class="flex flex-col lg:flex-row gap-6 items-start">
 
     {{-- 左カラム: 基本情報 --}}
-    <div class="w-72 shrink-0 space-y-4">
+    <div class="w-full lg:w-72 lg:shrink-0 space-y-4">
 
         {{-- 患者情報カード --}}
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

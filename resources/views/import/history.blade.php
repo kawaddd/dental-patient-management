@@ -26,7 +26,6 @@
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95">
 
-        {{-- アイコン --}}
         <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mx-auto mb-4">
             <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -35,8 +34,7 @@
 
         <h3 class="text-base font-bold text-gray-900 text-center mb-1">履歴を削除しますか？</h3>
         <p class="text-sm text-gray-500 text-center mb-1" x-text="filename"></p>
-        <p class="text-xs text-center mb-6"
-           :class="hasErrors ? 'text-red-500' : 'text-gray-400'">
+        <p class="text-xs text-center mb-6" :class="hasErrors ? 'text-red-500' : 'text-gray-400'">
             <span x-show="hasErrors">エラー詳細も合わせて削除されます。</span>この操作は取り消せません。
         </p>
 
@@ -69,10 +67,20 @@
 
 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
     @forelse($jobs as $job)
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-            <div class="flex items-center gap-4">
+        @php
+            $statusMap = [
+                'completed'  => ['label' => '完了',   'class' => 'bg-green-100 text-green-700'],
+                'processing' => ['label' => '処理中', 'class' => 'bg-blue-100 text-blue-700'],
+                'failed'     => ['label' => '失敗',   'class' => 'bg-red-100 text-red-700'],
+            ];
+            $s = $statusMap[$job->status] ?? ['label' => $job->status, 'class' => 'bg-gray-100 text-gray-600'];
+        @endphp
+
+        <div class="px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+            <div class="flex items-start gap-3">
+
                 {{-- タイプアイコン --}}
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5
                     {{ $job->type === 'customers' ? 'bg-blue-50' : 'bg-purple-50' }}">
                     <svg class="w-5 h-5 {{ $job->type === 'customers' ? 'text-blue-600' : 'text-purple-600' }}"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,61 +91,59 @@
                         @endif
                     </svg>
                 </div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-900">{{ $job->filename }}</p>
+
+                {{-- ファイル名・日時（左：flex-1）--}}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $job->filename }}</p>
                     <p class="text-xs text-gray-400 mt-0.5">
-                        {{ $job->type === 'customers' ? '患者CSV' : '予約CSV' }}
-                        ・{{ $job->created_at->format('Y/m/d H:i') }}
+                        {{ $job->type === 'customers' ? '患者CSV' : '予約CSV' }}・{{ $job->created_at->format('Y/m/d H:i') }}
                     </p>
                 </div>
-            </div>
 
-            <div class="flex items-center gap-6">
-                {{-- 件数 --}}
-                <div class="text-right">
-                    <div class="flex items-center gap-3 text-sm">
-                        <span class="text-gray-500">合計 <span class="font-semibold text-gray-800">{{ $job->total_rows }}</span>件</span>
-                        <span class="text-green-600">成功 <span class="font-semibold">{{ $job->success_rows }}</span></span>
-                        @if($job->error_rows > 0)
-                            <span class="text-red-500">エラー <span class="font-semibold">{{ $job->error_rows }}</span></span>
-                        @endif
+                {{-- 右側：統計縦列 ＋ 削除ボタン --}}
+                <div class="flex items-start gap-3 shrink-0">
+
+                    {{-- 統計＋ステータス --}}
+                    <div class="text-right space-y-1">
+                        {{-- 1行目: 合計〇件 成功〇 [エラー〇] --}}
+                        <p class="text-xs text-gray-500 whitespace-nowrap">
+                            合計 <span class="font-semibold text-gray-700">{{ $job->total_rows }}</span>件
+                            <span class="text-green-600 ml-1.5">成功 <span class="font-semibold">{{ $job->success_rows }}</span></span>
+                            @if($job->error_rows > 0)
+                                <span class="text-red-500 ml-1.5">エラー <span class="font-semibold">{{ $job->error_rows }}</span></span>
+                            @endif
+                        </p>
+                        {{-- 2行目: ステータスバッジ [エラー詳細] --}}
+                        <div class="flex items-center justify-end gap-1.5">
+                            <span class="px-2 py-0.5 rounded-md text-xs font-medium whitespace-nowrap {{ $s['class'] }}">
+                                {{ $s['label'] }}
+                            </span>
+                            @if($job->error_rows > 0)
+                                <a href="{{ route('import.errors', $job) }}"
+                                   class="flex items-center gap-0.5 text-xs text-red-500 hover:text-red-700 hover:underline font-medium whitespace-nowrap">
+                                    エラー詳細
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </a>
+                            @endif
+                        </div>
                     </div>
-                </div>
 
-                {{-- ステータス --}}
-                @php
-                    $statusMap = [
-                        'completed'  => ['label' => '完了',   'class' => 'bg-green-100 text-green-700'],
-                        'processing' => ['label' => '処理中', 'class' => 'bg-blue-100 text-blue-700'],
-                        'failed'     => ['label' => '失敗',   'class' => 'bg-red-100 text-red-700'],
-                    ];
-                    $s = $statusMap[$job->status] ?? ['label' => $job->status, 'class' => 'bg-gray-100 text-gray-600'];
-                @endphp
-                <span class="px-2.5 py-1 rounded-lg text-xs font-medium {{ $s['class'] }}">{{ $s['label'] }}</span>
-
-                {{-- エラー詳細リンク --}}
-                @if($job->error_rows > 0)
-                    <a href="{{ route('import.errors', $job) }}"
-                       class="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 hover:underline">
-                        エラー詳細
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    {{-- 削除ボタン --}}
+                    <form id="delete-form-{{ $job->id }}" method="POST" action="{{ route('import.destroy', $job) }}">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                    <button type="button"
+                            @click="open = true; filename = '{{ addslashes($job->filename) }}'; formId = 'delete-form-{{ $job->id }}'; hasErrors = {{ $job->error_rows > 0 ? 'true' : 'false' }}"
+                            class="flex items-center justify-center w-7 h-7 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0 mt-0.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
-                    </a>
-                @endif
+                    </button>
 
-                {{-- 削除ボタン --}}
-                <form id="delete-form-{{ $job->id }}" method="POST" action="{{ route('import.destroy', $job) }}">
-                    @csrf
-                    @method('DELETE')
-                </form>
-                <button type="button"
-                        @click="open = true; filename = '{{ addslashes($job->filename) }}'; formId = 'delete-form-{{ $job->id }}'; hasErrors = {{ $job->error_rows > 0 ? 'true' : 'false' }}"
-                        class="flex items-center justify-center w-8 h-8 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                </button>
+                </div>
             </div>
         </div>
     @empty
@@ -155,7 +161,6 @@
     <div class="mt-4">{{ $jobs->links() }}</div>
 @endif
 
-{{-- x-data ラッパー閉じ --}}
 </div>
 
 <script>
@@ -165,12 +170,8 @@ function deleteModal() {
         filename:  '',
         formId:    '',
         hasErrors: false,
-        cancel() {
-            this.open = false;
-        },
-        confirm() {
-            document.getElementById(this.formId).submit();
-        },
+        cancel() { this.open = false; },
+        confirm() { document.getElementById(this.formId).submit(); },
     };
 }
 </script>

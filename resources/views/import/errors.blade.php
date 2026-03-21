@@ -88,7 +88,7 @@ function friendlyError(string $message): array {
 </div>
 
 {{-- サマリー --}}
-<div class="grid grid-cols-3 gap-4 mb-6">
+<div class="grid grid-cols-3 gap-3 md:gap-4 mb-6">
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
         <p class="text-xs text-gray-400 mb-1">合計</p>
         <p class="text-2xl font-bold text-gray-900">{{ $importJob->total_rows }}<span class="text-sm font-normal text-gray-400 ml-1">件</span></p>

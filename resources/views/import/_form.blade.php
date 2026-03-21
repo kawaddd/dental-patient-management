@@ -1,7 +1,7 @@
-<div class="grid grid-cols-3 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
     {{-- アップロードフォーム --}}
-    <div class="col-span-2">
+    <div class="md:col-span-2">
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <form method="POST" action="{{ $action }}" enctype="multipart/form-data"
                   x-data="{ loading: false, filename: '', dragover: false }" @submit="loading = true">
