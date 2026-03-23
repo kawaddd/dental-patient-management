@@ -27,11 +27,11 @@ class ProductionSampleSeeder extends Seeder
 
         // ── 院 ──────────────────────────────────────────
         $stores = collect([
-            ['store_code' => 'C001', 'name' => '渋谷セントラル歯科'],
-            ['store_code' => 'C002', 'name' => '新宿ファミリー歯科'],
-            ['store_code' => 'C003', 'name' => '池袋マイ歯科クリニック'],
-            ['store_code' => 'C004', 'name' => '品川ホワイト歯科'],
-            ['store_code' => 'C005', 'name' => '吉祥寺ひまわり歯科'],
+            ['store_code' => 'C001', 'name' => '佐藤歯科クリニック'],
+            ['store_code' => 'C002', 'name' => '鈴木歯科クリニック'],
+            ['store_code' => 'C003', 'name' => '高橋歯科クリニック'],
+            ['store_code' => 'C004', 'name' => '田中歯科クリニック'],
+            ['store_code' => 'C005', 'name' => '渡辺歯科クリニック'],
         ])->map(fn($d) => Store::create($d));
 
         // ── 患者データ ───────────────────────────────────

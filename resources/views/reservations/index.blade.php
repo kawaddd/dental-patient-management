@@ -6,78 +6,107 @@
 
 <div x-data="reservationSearch()" x-init="init()" @keydown.window.escape="clearFilters()">
 
-{{-- ヘッダー --}}
-<div class="flex items-center justify-between mb-4">
+{{-- ページヘッダー --}}
+<div class="flex items-center justify-between mb-3">
     <h1 class="text-2xl font-bold text-gray-900">予約一覧</h1>
     <div class="flex items-center gap-2">
         <button x-show="activeFilterCount > 0"
+                x-cloak
                 @click="clearFilters()"
                 class="text-xs text-gray-400 hover:text-gray-600 px-2 py-2 transition-colors">
             すべてクリア
         </button>
         <button @click="showFilters = !showFilters"
-                class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors min-h-[44px]">
+                class="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors min-h-[40px]">
             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
             </svg>
-            フィルター
-            <span x-show="activeFilterCount > 0"
-                  class="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold leading-none"
-                  x-text="activeFilterCount"></span>
+            絞り込み
+            <span x-show="filterCount > 0"
+                  class="bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none"
+                  x-text="filterCount"></span>
         </button>
     </div>
 </div>
 
-{{-- フィルターパネル（上部展開）--}}
+{{-- 検索ボックス（常時表示）--}}
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-3 py-3 mb-3">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+
+        <div>
+            <label class="block text-xs text-gray-400 mb-1">予約ID</label>
+            <input type="text" x-model="filters.reservation_id" @input.debounce.400ms="search()"
+                   class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all"
+                   placeholder="R001">
+        </div>
+
+        <div>
+            <label class="block text-xs text-gray-400 mb-1">患者 / 患者（カナ）</label>
+            <input type="text" x-model="filters.search" @input.debounce.400ms="search()"
+                   class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all"
+                   placeholder="山田 / ヤマダ">
+        </div>
+
+        <div>
+            <label class="block text-xs text-gray-400 mb-1">予約日時（開始）</label>
+            <input type="date" x-model="filters.date_from"
+                   :max="filters.date_to || ''"
+                   @change="if (filters.date_to && $event.target.value > filters.date_to) { filters.date_to = '' } search()"
+                   class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all">
+        </div>
+
+        <div>
+            <label class="block text-xs text-gray-400 mb-1">予約日時（終了）</label>
+            <input type="date" x-model="filters.date_to"
+                   :min="filters.date_from || ''"
+                   @change="if (filters.date_from && $event.target.value < filters.date_from) { filters.date_from = '' } search()"
+                   class="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all">
+        </div>
+
+    </div>
+</div>
+
+{{-- フィルターパネル（トグル）--}}
 <div x-show="showFilters"
      x-cloak
-     class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-        {{-- 患者名/ID --}}
-        <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">患者名 / 患者ID</p>
-            <input type="text" x-model="filters.search" @input.debounce.400ms="search()"
-                   class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   placeholder="例: 山田、P001">
-        </div>
+     x-transition:enter="transition ease-out duration-150"
+     x-transition:enter-start="opacity-0 -translate-y-1"
+     x-transition:enter-end="opacity-100 translate-y-0"
+     x-transition:leave="transition ease-in duration-100"
+     x-transition:leave-start="opacity-100 translate-y-0"
+     x-transition:leave-end="opacity-0 -translate-y-1"
+     class="bg-white rounded-2xl border border-gray-100 shadow-sm px-3 py-3 mb-3">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
         {{-- ステータス --}}
         <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
                 ステータス
                 <span x-show="filters.statuses.length > 0"
                       class="ml-1 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full"
                       x-text="filters.statuses.length"></span>
             </p>
-            <div class="space-y-1.5">
+            <div class="space-y-1">
                 @foreach(['reserved' => '予約中', 'completed' => '完了', 'cancelled' => 'キャンセル'] as $val => $label)
-                <label class="flex items-center gap-2.5 cursor-pointer min-h-[32px] group">
+                <label class="flex items-center gap-2 cursor-pointer group">
                     <input type="checkbox" value="{{ $val }}"
                            x-model="filters.statuses" @change="search()"
-                           class="w-4 h-4 rounded text-blue-600 border-gray-300">
+                           class="w-3.5 h-3.5 rounded text-blue-600 border-gray-300">
                     <span class="text-sm text-gray-700 group-hover:text-gray-900">{{ $label }}</span>
                 </label>
                 @endforeach
             </div>
         </div>
 
-        {{-- 予約日 --}}
-        <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">予約日</p>
-            <input type="date" x-model="filters.date" @change="search()"
-                   class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-
-        {{-- 治療内容 --}}
-        <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+        {{-- 治療内容（2カラム展開）--}}
+        <div class="sm:col-span-2">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
                 治療内容
                 <span x-show="filters.treatment_types.length > 0"
                       class="ml-1 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full"
                       x-text="filters.treatment_types.length"></span>
             </p>
-            <div class="max-h-48 overflow-y-auto space-y-0.5 -mx-1 px-1">
+            <div class="max-h-44 overflow-y-auto space-y-0 pr-1">
                 @foreach([
                     '検査・診断'     => ['初診検査','定期健診','精密検査','レントゲン撮影','CT撮影','型取り（印象採得）','咬合検査'],
                     '一般歯科'       => ['虫歯治療','レジン充填（白い詰め物）','インレー（金属詰め物）','セラミックインレー','根管治療（神経治療）','抜髄（神経を抜く）','感染根管治療（再治療）','歯根端切除術','抜歯','親知らず抜歯','乳歯治療'],
@@ -90,21 +119,23 @@
                 ] as $group => $items)
                 <div x-data="{ open: false }">
                     <button @click="open = !open"
-                            class="flex items-center justify-between w-full text-xs font-semibold text-gray-400 py-1.5 hover:text-gray-600 transition-colors">
+                            class="flex items-center justify-between w-full text-xs font-semibold text-gray-400 py-1 hover:text-gray-600 transition-colors">
                         <span>{{ $group }}</span>
-                        <svg class="w-3 h-3 transition-transform" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-3 h-3 shrink-0 transition-transform duration-150" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                         </svg>
                     </button>
-                    <div x-show="open" x-collapse class="space-y-0.5 pb-1">
-                        @foreach($items as $item)
-                        <label class="flex items-center gap-2.5 cursor-pointer min-h-[28px] group pl-1">
-                            <input type="checkbox" value="{{ $item }}"
-                                   x-model="filters.treatment_types" @change="search()"
-                                   class="w-4 h-4 rounded text-blue-600 border-gray-300 shrink-0">
-                            <span class="text-xs text-gray-600 group-hover:text-gray-900 leading-snug">{{ $item }}</span>
-                        </label>
-                        @endforeach
+                    <div x-show="open" x-collapse>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-0 pb-1">
+                            @foreach($items as $item)
+                            <label class="flex items-center gap-1.5 cursor-pointer group py-0.5">
+                                <input type="checkbox" value="{{ $item }}"
+                                       x-model="filters.treatment_types" @change="search()"
+                                       class="w-3.5 h-3.5 rounded text-blue-600 border-gray-300 shrink-0">
+                                <span class="text-xs text-gray-600 group-hover:text-gray-900 leading-tight truncate">{{ $item }}</span>
+                            </label>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
                 @endforeach
@@ -114,10 +145,10 @@
     </div>
 </div>
 
-{{-- テーブルエリア（常時全幅）--}}
+{{-- テーブルエリア --}}
 <div>
 
-    <div class="flex items-center justify-between mb-3">
+    <div class="flex items-center justify-between mb-2">
         <p class="text-sm text-gray-500">
             <span class="font-semibold text-gray-800" x-text="total"></span> 件
         </p>
@@ -131,119 +162,111 @@
     </div>
 
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
-        <table class="w-full text-sm" style="min-width: 640px;">
+        <table class="w-full text-sm" style="table-layout: fixed; min-width: 640px;">
+            <colgroup>
+                <col style="width: 14%"> {{-- 予約日時 --}}
+                <col style="width: 10%"> {{-- 予約ID --}}
+                <col style="width: 24%"> {{-- 患者 --}}
+                <col style="width: 13%"> {{-- ステータス --}}
+                <col style="width: 27%"> {{-- 治療内容 --}}
+                <col style="width: 12%"> {{-- 担当者 --}}
+            </colgroup>
             <thead>
                 <tr class="border-b border-gray-100 bg-gray-50">
 
-                    {{-- 予約日時 --}}
-                    <th class="px-4 py-3 text-left w-28">
+                    <th class="px-4 py-3 text-left">
                         <div class="flex items-center gap-1.5">
                             <span class="text-xs font-semibold uppercase tracking-wide"
                                   :class="sort.column === 'reserved_at' ? 'text-blue-600' : 'text-gray-400'">予約日時</span>
                             <div class="flex flex-col gap-px">
-                                <button @click="setSort('reserved_at', 'asc')"
-                                        :class="sort.column === 'reserved_at' && sort.dir === 'asc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
+                                <button @click="setSort('reserved_at', 'asc')" :class="sort.column === 'reserved_at' && sort.dir === 'asc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
                                     <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 10 6"><path d="M5 0l5 6H0z"/></svg>
                                 </button>
-                                <button @click="setSort('reserved_at', 'desc')"
-                                        :class="sort.column === 'reserved_at' && sort.dir === 'desc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
+                                <button @click="setSort('reserved_at', 'desc')" :class="sort.column === 'reserved_at' && sort.dir === 'desc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
                                     <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 10 6"><path d="M5 6L0 0h10z"/></svg>
                                 </button>
                             </div>
                         </div>
                     </th>
 
-                    {{-- 患者 --}}
+                    <th class="px-4 py-3 text-left">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-semibold uppercase tracking-wide"
+                                  :class="sort.column === 'reservation_id' ? 'text-blue-600' : 'text-gray-400'">予約ID</span>
+                            <div class="flex flex-col gap-px">
+                                <button @click="setSort('reservation_id', 'asc')" :class="sort.column === 'reservation_id' && sort.dir === 'asc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
+                                    <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 10 6"><path d="M5 0l5 6H0z"/></svg>
+                                </button>
+                                <button @click="setSort('reservation_id', 'desc')" :class="sort.column === 'reservation_id' && sort.dir === 'desc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
+                                    <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 10 6"><path d="M5 6L0 0h10z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </th>
+
                     <th class="px-4 py-3 text-left">
                         <div class="flex items-center gap-1.5">
                             <span class="text-xs font-semibold uppercase tracking-wide"
                                   :class="sort.column === 'customer' ? 'text-blue-600' : 'text-gray-400'">患者</span>
                             <div class="flex flex-col gap-px">
-                                <button @click="setSort('customer', 'asc')"
-                                        :class="sort.column === 'customer' && sort.dir === 'asc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
+                                <button @click="setSort('customer', 'asc')" :class="sort.column === 'customer' && sort.dir === 'asc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
                                     <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 10 6"><path d="M5 0l5 6H0z"/></svg>
                                 </button>
-                                <button @click="setSort('customer', 'desc')"
-                                        :class="sort.column === 'customer' && sort.dir === 'desc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
+                                <button @click="setSort('customer', 'desc')" :class="sort.column === 'customer' && sort.dir === 'desc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
                                     <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 10 6"><path d="M5 6L0 0h10z"/></svg>
                                 </button>
                             </div>
                         </div>
                     </th>
 
-                    {{-- ステータス --}}
-                    <th class="px-4 py-3 text-left w-24">
+                    <th class="px-4 py-3 text-left">
                         <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">ステータス</span>
                     </th>
 
-                    {{-- 治療内容 --}}
                     <th class="px-4 py-3 text-left">
                         <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">治療内容</span>
                     </th>
 
-                    {{-- 担当者 --}}
-                    <th class="px-4 py-3 text-left w-20">
+                    <th class="px-4 py-3 text-left">
                         <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">担当者</span>
-                    </th>
-
-                    {{-- 予約ID --}}
-                    <th class="px-4 py-3 text-left w-24">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-xs font-semibold uppercase tracking-wide"
-                                  :class="sort.column === 'reservation_id' ? 'text-blue-600' : 'text-gray-400'">予約ID</span>
-                            <div class="flex flex-col gap-px">
-                                <button @click="setSort('reservation_id', 'asc')"
-                                        :class="sort.column === 'reservation_id' && sort.dir === 'asc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
-                                    <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 10 6"><path d="M5 0l5 6H0z"/></svg>
-                                </button>
-                                <button @click="setSort('reservation_id', 'desc')"
-                                        :class="sort.column === 'reservation_id' && sort.dir === 'desc' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-500'">
-                                    <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 10 6"><path d="M5 6L0 0h10z"/></svg>
-                                </button>
-                            </div>
-                        </div>
                     </th>
 
                 </tr>
             </thead>
             <tbody>
                 <template x-if="loading">
-                    <tr>
-                        <td colspan="6" class="px-6 py-14 text-center">
-                            <svg class="w-6 h-6 animate-spin text-blue-400 mx-auto" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
-                        </td>
-                    </tr>
+                    <tr><td colspan="6" class="px-6 py-14 text-center">
+                        <svg class="w-6 h-6 animate-spin text-blue-400 mx-auto" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                    </td></tr>
                 </template>
 
                 <template x-if="!loading && reservations.length === 0">
-                    <tr>
-                        <td colspan="6" class="px-6 py-16 text-center text-gray-400 text-sm">
-                            該当する予約データがありません
-                        </td>
-                    </tr>
+                    <tr><td colspan="6" class="px-6 py-16 text-center text-gray-400 text-sm">
+                        該当する予約データがありません
+                    </td></tr>
                 </template>
 
                 <template x-for="r in reservations" :key="r.id">
                     <tr class="border-b border-gray-50 last:border-0 hover:bg-blue-50 transition-colors">
 
-                        {{-- 予約日時 --}}
-                        <td class="px-4 py-3.5">
+                        <td class="px-4 py-3.5 overflow-hidden">
                             <div class="font-medium text-gray-800 text-sm" x-text="r.reserved_date"></div>
                             <div class="text-xs text-gray-400" x-text="r.reserved_time"></div>
                         </td>
 
-                        {{-- 患者 --}}
-                        <td class="px-4 py-3.5">
+                        <td class="px-4 py-3.5 overflow-hidden text-xs text-gray-400 font-mono truncate" x-text="r.reservation_id"></td>
+
+                        <td class="px-4 py-3.5 overflow-hidden">
                             <template x-if="r.customer">
                                 <div>
                                     <a :href="r.customer.url"
-                                       class="font-medium text-blue-600 hover:underline text-sm"
+                                       class="font-medium text-blue-600 hover:underline text-sm truncate block"
                                        x-text="r.customer.name_kana ? r.customer.name + '（' + r.customer.name_kana + '）' : r.customer.name"
                                        @click.stop></a>
-                                    <div class="text-xs text-gray-400" x-text="r.customer.customer_id"></div>
+                                    <div class="text-xs text-gray-400 truncate" x-text="r.customer.customer_id"></div>
                                 </div>
                             </template>
                             <template x-if="!r.customer">
@@ -251,24 +274,22 @@
                             </template>
                         </td>
 
-                        {{-- ステータス --}}
-                        <td class="px-4 py-3.5">
+                        <td class="px-4 py-3.5 overflow-hidden">
                             <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-medium border whitespace-nowrap"
                                   :class="{
-                                      'bg-blue-50 text-blue-700 border-blue-200':   r.status === 'reserved',
+                                      'bg-blue-50 text-blue-700 border-blue-200':    r.status === 'reserved',
                                       'bg-green-50 text-green-700 border-green-200': r.status === 'completed',
-                                      'bg-gray-100 text-gray-500 border-gray-200':  r.status === 'cancelled',
+                                      'bg-gray-100 text-gray-500 border-gray-200':   r.status === 'cancelled',
                                   }"
                                   x-text="{ reserved: '予約中', completed: '完了', cancelled: 'キャンセル' }[r.status] || r.status">
                             </span>
                         </td>
 
-                        {{-- 治療内容 --}}
-                        <td class="px-4 py-3.5">
+                        <td class="px-4 py-3.5 overflow-hidden">
                             <template x-if="r.treatment_type">
                                 <div>
-                                    <div class="text-gray-800 text-sm" x-text="r.treatment_type"></div>
-                                    <div class="text-xs text-gray-400" x-show="r.treatment_area" x-text="r.treatment_area"></div>
+                                    <div class="text-gray-800 text-sm truncate" x-text="r.treatment_type"></div>
+                                    <div class="text-xs text-gray-400 truncate" x-show="r.treatment_area" x-text="r.treatment_area"></div>
                                 </div>
                             </template>
                             <template x-if="!r.treatment_type">
@@ -276,11 +297,7 @@
                             </template>
                         </td>
 
-                        {{-- 担当者 --}}
                         <td class="px-4 py-3.5 text-sm text-gray-600" x-text="r.staff || '—'"></td>
-
-                        {{-- 予約ID --}}
-                        <td class="px-4 py-3.5 text-xs text-gray-400 font-mono" x-text="r.reservation_id"></td>
 
                     </tr>
                 </template>
@@ -297,12 +314,14 @@
 function reservationSearch() {
     return {
         filters: {
+            reservation_id:  '',
             search:          '',
+            date_from:       '',
+            date_to:         '',
             statuses:        [],
-            date:            '',
             treatment_types: [],
         },
-        sort:        { column: '', dir: 'asc' },
+        sort:        { column: '', dir: 'desc' },
         currentPage: 1,
         reservations: [],
         total:       0,
@@ -310,24 +329,27 @@ function reservationSearch() {
         loading:     false,
         showFilters: false,
 
-        get activeFilterCount() {
-            return (this.filters.search ? 1 : 0)
-                + this.filters.statuses.length
-                + (this.filters.date ? 1 : 0)
+        get filterCount() {
+            return this.filters.statuses.length
                 + this.filters.treatment_types.length;
         },
 
-        init() {
-            this.search();
+        get activeFilterCount() {
+            return (this.filters.reservation_id ? 1 : 0)
+                + (this.filters.search ? 1 : 0)
+                + (this.filters.date_from ? 1 : 0)
+                + (this.filters.date_to ? 1 : 0)
+                + this.filters.statuses.length
+                + this.filters.treatment_types.length;
         },
+
+        init() { this.search(); },
 
         setSort(column, dir) {
             if (this.sort.column === column && this.sort.dir === dir) {
-                this.sort.column = '';
-                this.sort.dir    = 'asc';
+                this.sort.column = ''; this.sort.dir = 'desc';
             } else {
-                this.sort.column = column;
-                this.sort.dir    = dir;
+                this.sort.column = column; this.sort.dir = dir;
             }
             this.search();
         },
@@ -335,21 +357,17 @@ function reservationSearch() {
         async search(resetPage = true) {
             if (resetPage) this.currentPage = 1;
             this.loading = true;
-
             const params = new URLSearchParams();
-            if (this.filters.search) params.set('search', this.filters.search);
+            if (this.filters.reservation_id) params.set('reservation_id', this.filters.reservation_id);
+            if (this.filters.search)         params.set('search', this.filters.search);
+            if (this.filters.date_from)      params.set('date_from', this.filters.date_from);
+            if (this.filters.date_to)        params.set('date_to', this.filters.date_to);
             this.filters.statuses.forEach(v => params.append('statuses[]', v));
-            if (this.filters.date) params.set('date', this.filters.date);
             this.filters.treatment_types.forEach(v => params.append('treatment_types[]', v));
-            if (this.sort.column) {
-                params.set('sort', this.sort.column);
-                params.set('dir',  this.sort.dir);
-            }
+            if (this.sort.column) { params.set('sort', this.sort.column); params.set('dir', this.sort.dir); }
             if (this.currentPage > 1) params.set('page', this.currentPage);
 
-            const res = await fetch(`{{ route('reservations.index') }}?${params}`, {
-                headers: { 'Accept': 'application/json' }
-            });
+            const res = await fetch(`{{ route('reservations.index') }}?${params}`, { headers: { 'Accept': 'application/json' } });
             const data = await res.json();
             this.reservations = data.reservations;
             this.total        = data.total;
@@ -368,8 +386,8 @@ function reservationSearch() {
         },
 
         clearFilters() {
-            this.filters = { search: '', statuses: [], date: '', treatment_types: [] };
-            this.sort    = { column: 'reserved_at', dir: 'desc' };
+            this.filters = { reservation_id: '', search: '', date_from: '', date_to: '', statuses: [], treatment_types: [] };
+            this.sort = { column: '', dir: 'desc' };
             this.search();
         },
     };

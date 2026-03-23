@@ -30,15 +30,24 @@ class ReservationController extends Controller
             $query->whereIn('reservations.status', $statuses);
         }
 
-        if ($date = $request->input('date')) {
-            $query->whereDate('reserved_at', $date);
+        if ($date_from = $request->input('date_from')) {
+            $query->whereDate('reserved_at', '>=', $date_from);
+        }
+
+        if ($date_to = $request->input('date_to')) {
+            $query->whereDate('reserved_at', '<=', $date_to);
         }
 
         if ($search = $request->input('search')) {
             $query->whereHas('customer', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('name_kana', 'like', "%{$search}%")
                   ->orWhere('customer_id', 'like', "%{$search}%");
             });
+        }
+
+        if ($reservation_id = $request->input('reservation_id')) {
+            $query->where('reservation_id', 'like', "%{$reservation_id}%");
         }
 
         if ($treatments = $request->input('treatment_types')) {

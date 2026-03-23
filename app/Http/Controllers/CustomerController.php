@@ -18,6 +18,29 @@ class CustomerController extends Controller
             $query->where('customer_id', 'like', "%{$request->customer_id}%");
         }
 
+        if ($request->filled('name')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->name}%")
+                  ->orWhere('name_kana', 'like', "%{$request->name}%");
+            });
+        }
+
+        if ($request->filled('last_visit_from')) {
+            $from = $request->input('last_visit_from');
+            $query->whereRaw(
+                '(SELECT MAX(treated_at) FROM treatment_histories WHERE treatment_histories.customer_id = customers.id) >= ?',
+                [$from]
+            );
+        }
+
+        if ($request->filled('last_visit_to')) {
+            $to = $request->input('last_visit_to');
+            $query->whereRaw(
+                '(SELECT MAX(treated_at) FROM treatment_histories WHERE treatment_histories.customer_id = customers.id) <= ?',
+                [$to . ' 23:59:59']
+            );
+        }
+
         if ($request->filled('store_ids')) {
             $query->whereIn('store_id', $request->store_ids);
         }
